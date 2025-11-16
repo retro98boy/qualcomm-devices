@@ -96,12 +96,12 @@ Duplicate: OEM:Qualcomm         MODEL:0000      HWID:0000000000000000   SWID:000
 root@NucBox-K6:/workspace# mv /usr/src/edl/Loaders/Duplicate/0000000000000000_bdaf51b59ba21d8a_fhprg.bin /workspace/qualcomm/damo-cockpit8250
 ```
 
-最终`0000000000000000_bdaf51b59ba21d8a_fhprg.bin`就是需要的loader，该loader可以在本仓库的Releases界面下载
+最终`0000000000000000_bdaf51b59ba21d8a_fhprg.bin`就是需要的loader，该loader可以在本仓库的[Releases界面](https://github.com/retro98boy/qualcomm-devices/releases/tag/damo-cockpit8250)下载
 
 将设备进入EDL模式，再用Type-C线连接至PC，执行下面的命令来备份整个UFS：
 
 ```
-# 备份所有LUN的GPT
+# 备份所有LUN的GPT信息
 edl --loader=./0000000000000000_bdaf51b59ba21d8a_fhprg.bin printgpt --memory=ufs > printgpt.txt
 
 # 按分区来备份所有LUN上的分区
@@ -157,7 +157,7 @@ edl --loader=./0000000000000000_bdaf51b59ba21d8a_fhprg.bin w dtbo_b sm8250-damo-
 
 这里作者选择USB加extlinux
 
-在本仓库的Releases界面下载xbl-u-boot.mbn，然后刻录到xbl_a/xbl_b分区即可使用U-Boot：
+在本仓库的[Releases界面](https://github.com/retro98boy/qualcomm-devices/releases/tag/damo-cockpit8250)下载xbl-u-boot.mbn，然后刻录到xbl_a/xbl_b分区即可使用U-Boot：
 
 ```
 edl --loader=./0000000000000000_bdaf51b59ba21d8a_fhprg.bin w xbl_a xbl-u-boot.mbn --memory=ufs --lun=1
