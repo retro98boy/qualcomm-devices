@@ -1,6 +1,10 @@
 # 固件
 
-[Armbian](https://github.com/retro98boy/armbian-build)
+[Armbian](https://github.com/retro98boy/armbian-build)提供ABL/EFI两种版本的固件
+
+[Batocera](https://github.com/retro98boy/batocera.linux)仅提供EFI版固件
+
+注意：在使用以上固件之前，应该先检查板子的GMSL供电是否短路。由于以上固件打开了GMSL POC，如果存在短路，MAX9296（U42 U49 U56）电路会发烫
 
 # 硬件
 
@@ -124,15 +128,15 @@ edl --loader=./0000000000000000_bdaf51b59ba21d8a_fhprg.bin rf flash.bin --memory
 将内核刷入boot_a和boot_b。如果想玩Armbian+Android/xxx双系统，刷入一个槽位即可，但是要确保激活Armbian对应的槽位
 
 ```
-edl --loader=./0000000000000000_bdaf51b59ba21d8a_fhprg.bin w boot_a Armbian-unofficial_25.11.0-trunk_Damo-cockpit8250_noble_current_6.12.58.boot_sm8250-damo-cockpit8250.img --memory=ufs --lun=4
+edl --loader=./0000000000000000_bdaf51b59ba21d8a_fhprg.bin w boot_a Armbian-unofficial_25.11.0-trunk_Damo-cockpit8250-abl_noble_current_6.12.58.boot_sm8250-damo-cockpit8250.img --memory=ufs --lun=4
 
-edl --loader=./0000000000000000_bdaf51b59ba21d8a_fhprg.bin w boot_b Armbian-unofficial_25.11.0-trunk_Damo-cockpit8250_noble_current_6.12.58.boot_sm8250-damo-cockpit8250.img --memory=ufs --lun=4
+edl --loader=./0000000000000000_bdaf51b59ba21d8a_fhprg.bin w boot_b Armbian-unofficial_25.11.0-trunk_Damo-cockpit8250-abl_noble_current_6.12.58.boot_sm8250-damo-cockpit8250.img --memory=ufs --lun=4
 ```
 
 将rootfs刷入userdata。userdata空间占整个UFS的大部分，用于存储Android用户数据。如果想玩Armbian+Android/xxx双系统，可提前将userdata分区缩小，再创建一个大小够用的分区用于刷入Armbian的rootfs
 
 ```
-edl --loader=./0000000000000000_bdaf51b59ba21d8a_fhprg.bin w userdata Armbian-unofficial_25.11.0-trunk_Damo-cockpit8250_noble_current_6.12.58.rootfs.img --memory=ufs --lun=0
+edl --loader=./0000000000000000_bdaf51b59ba21d8a_fhprg.bin w userdata Armbian-unofficial_25.11.0-trunk_Damo-cockpit8250-abl_noble_current_6.12.58.rootfs.img --memory=ufs --lun=0
 ```
 
 将空的dtbo刷入dtbo_a和dtbo_b。因为XBL/ABL加载内核和dtb后，会尝试应用dtbo，原厂的dtbo是不适用于主线dtb的，所以作者编译了一个空dtbo，不会修改dtb任何东西，也不会报错。只刷入一个槽位还是两个按照自己的需求
@@ -155,7 +159,7 @@ edl --loader=./0000000000000000_bdaf51b59ba21d8a_fhprg.bin w dtbo_b sm8250-damo-
 
 本地存储（UFS/USB）有：U-Boot script，extlinux，EFI（GRUB/systemd-boot）
 
-这里作者选择USB加extlinux
+~~这里作者选择USB加extlinux~~大多未开启secureboot的sm8250设备固件使用EFI引导
 
 在本仓库的[Releases界面](https://github.com/retro98boy/qualcomm-devices/releases/tag/damo-cockpit8250)下载xbl-u-boot.mbn，然后刻录到xbl_a/xbl_b分区即可使用U-Boot：
 
@@ -207,6 +211,39 @@ cp build/xbl-u-boot.mbn ~/workspace/qualcomm/damo-cockpit8250
 ```
 
 上面的`~/workspace/qualcomm/damo-cockpit8250/xbl.elf`来自移远SG865W-WF模组的Android EDL线刷包`SG865WWFPAR03A01_BA03BP01K0M01V01_AP13.0.0.01.001V01.zip`
+
+# extlinux使用记录
+
+Armbian/Batocera引导由extlinux改为EFI，记录下之前在U-Boot下使用extlinux的过程
+
+打开`CONFIG_CMD_SYSBOOT=y`
+
+需要的环境变量：
+
+```
+scriptaddr=24a800000
+kernel_addr_r=266c00000
+ramdisk_addr_r=25ec00000
+fdt_addr_r=24a200000
+```
+
+bootcmd参考：
+
+```
+bootcmd=gpio set soc2; sleep 1; run usbboot
+bootfile=/boot/extlinux/extlinux.conf
+usbboot=usb reset; sysboot usb 0 any ${scriptaddr} ${bootfile}
+```
+
+extlinux.conf参考：
+
+```
+label Armbian-unofficial
+  kernel /boot/Image
+  initrd /boot/uInitrd
+  fdt /boot/dtb/qcom/sm8250-damo-cockpit8250.dtb
+  append root=UUID=b22602ea-ce1d-474d-95a2-0412c87417e6 console=ttyMSM0,115200n8 console=tty0 rw no_console_suspend consoleblank=0 fsck.fix=yes fsck.repair=yes net.ifnames=0 splash plymouth.ignore-serial-consoles
+```
 
 # 相关链接
 
