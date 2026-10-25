@@ -4,11 +4,13 @@
 
 # Lenovo Y700四代的一些使用技巧
 
-一，在平板任何状态下（操作系统运行中，操作系统卡死，EDL模式中），长按开机键加音量减键能强制重启设备。在重启过程中，合适的时机（关机后，亮屏开机前）改成按住音量加键加开机键，能让这次重启进入bootloader模式而不是boot
+一，刷机（无论是ADB/fastboot/EDL）都推荐使用长边的Type-C口
+
+二，在平板任何状态下（操作系统运行中，操作系统卡死，EDL模式中），长按开机键加音量减键能强制重启设备。在重启过程中，合适的时机（关机后，亮屏开机前）改成按住音量加键加开机键，能让这次重启进入bootloader模式而不是boot
 
 疑问：如果平板XBL/ABL损坏或者卡死，强制重启组合键还有用吗？
 
-二，平板进入EDL模式的办法
+三，平板进入EDL模式的办法
 
 - 处于安卓系统或recovery中：adb reboot edl
 
@@ -16,7 +18,7 @@
 
 - 接好EDL工程线再给平板上电/重启/强制重启
 
-三，fastboot flash/boot自制boot分区镜像失败的解决措施
+四，fastboot flash/boot自制boot分区镜像失败的解决措施
 
 如果你发现fastboot flash boot_a foo.img或者fastboot boot bar.img失败（foo.img和bar.img是自制的镜像）。可以进行如下操作：
 
@@ -33,27 +35,33 @@ fastboot: error: Command failed
 
 # 系统链接
 
-[Armbian](https://github.com/retro98boy/armbian-build)
+[Armbian](https://armbian.cn/boards)
 
 [Batocera](https://github.com/retro98boy/batocera.linux)
 
 [Armada](https://github.com/retro98boy/armada)
 
-固件已知问题：
+## 内核外设支持情况
 
-microSD卡暂时不能使用DMA，被限制成PIO，读写速度慢
+- 显示与触摸：支持触摸输入，以及 30/60/90/120/144/165 Hz 刷新率切换；已修复切换刷新率时的花屏、黑屏和熄屏后重新点亮失败的问题
+- 音频：支持双扬声器播放和双板载麦克风的双通道录音
+- USB：支持 Host 和 Device（gadget）模式；DTS 为两个 Type-C 接口配置双角色，长边接口接入 SuperSpeed 通路，短边接口接入 USB 2.0 通路。控制器配置的最高速率为 SuperSpeedPlus Gen2x1。长边Type-C支持DP Alt mode
+- USB 充电与电池：通过 PMIC GLINK 提供充电状态、电量和电流信息，已修正电池电流方向；短边接口连接原装充电器可充电，快充功率及双接口同时连接的行为尚未完整验证
+- Wi-Fi / 蓝牙：支持 WCN7860 PCIe Wi-Fi 和 UART 蓝牙，使用设备专用固件
+- 存储：支持内置 UFS 和 microSD 卡，microSD 的 DMA 限制见下文
+- GPU：支持硬件加速，需要设备专用签名的 ZAP 固件
+- 按键：支持电源键、音量加键和音量减键
+- 震动：支持双震动马达，通过 Linux input force-feedback 接口控制；应用需要主动调用该接口
+- 传感器：通过 `lenovo-elden-sensors` 支持加速度计、陀螺仪、环境光、接近、磁力计/指南针和霍尔传感器
+- 虚拟传感器：通过 `lenovo-elden-sensors` 可获取 DSP 提供的重力、线性加速度、旋转向量、游戏旋转向量、地磁旋转向量、计步、步伐检测和显著运动事件
 
-屏幕暂时被固定成120Hz
+已知限制：
 
-不支持安卓和Linux系统共存
+- microSD 卡暂时不能使用 DMA，被限制为 PIO，读写速度较慢
+- 两个 Type-C 接口共享 USB 2.0 控制器通路，拔出其中一个接口的连接可能重置控制器并影响另一个接口
+- 相机尚未支持
 
-暂未支持的外设：
-
-- 相机
-
-- 麦克风
-
-- 重力/磁力/环境光等各种传感器
+具体的内核补丁在[armbian/build](https://github.com/armbian/build)
 
 # 备份全分区
 

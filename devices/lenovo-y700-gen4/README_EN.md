@@ -4,19 +4,23 @@ Flashing firmware carries risks. Proceed with caution. The firmware provided her
 
 # Tips for the Lenovo Y700 Gen 4
 
-## 1. Force restarting and entering bootloader mode
+## 1. Recommended USB port for flashing
+
+Use the Type-C port on the long edge for flashing, whether using ADB, fastboot or EDL.
+
+## 2. Force restarting and entering bootloader mode
 
 In any device state—including a running operating system, a frozen operating system, or EDL mode—press and hold **Power + Volume Down** to force a restart. During the restart, switch to holding **Volume Up + Power** at the right moment (after the device powers off but before the screen lights up again) to enter bootloader mode instead of booting the operating system.
 
 Open question: Does this key combination still work if XBL/ABL is corrupted or frozen?
 
-## 2. Entering EDL mode
+## 3. Entering EDL mode
 
 - From Android or recovery: `adb reboot edl`
 - From bootloader (fastboot) or fastbootd: `fastboot oem edl`
 - Connect an EDL engineering cable, then power on, restart, or force restart the tablet.
 
-## 3. Recovering from failures to flash or boot a custom boot image
+## 4. Recovering from failures to flash or boot a custom boot image
 
 If `fastboot flash boot_a foo.img` or `fastboot boot bar.img` fails, where `foo.img` and `bar.img` are custom images, try the following:
 
@@ -34,23 +38,33 @@ fastboot: error: Command failed
 
 # Operating System Links
 
-[Armbian](https://github.com/retro98boy/armbian-build)
+[Armbian](https://armbian.com/boards)
 
 [Batocera](https://github.com/retro98boy/batocera.linux)
 
 [Armada](https://github.com/retro98boy/armada)
 
-Known firmware limitations:
+## Kernel Peripheral Support
+
+- Display and touchscreen: touch input and switching between 30/60/90/120/144/165 Hz are supported. Display corruption and black screens during refresh-rate changes, and failure to restore the display after turning it off, have been fixed.
+- Audio: dual-speaker playback and two-channel capture from the two onboard microphones are supported.
+- USB: Host and Device (gadget) modes are supported. Both Type-C ports are configured for dual-role operation in the DTS, with the long-edge port connected to the SuperSpeed path and the short-edge port to USB 2.0. The controller is configured for up to SuperSpeedPlus Gen2x1. The long-edge Type-C port supports DisplayPort Alt Mode.
+- USB charging and battery: PMIC GLINK provides charging status, battery level and current reporting, with the battery current direction corrected. Charging with the stock charger connected to the short-edge port works. Fast-charging power levels and simultaneous use of both ports have not been fully validated.
+- Wi-Fi / Bluetooth: WCN7860 PCIe Wi-Fi and UART Bluetooth are supported with device-specific firmware.
+- Storage: internal UFS and microSD cards are supported, subject to the microSD DMA limitation below.
+- GPU: hardware acceleration is supported and requires device-specific signed ZAP firmware.
+- Buttons: the power, volume-up and volume-down buttons are supported.
+- Haptics: both vibration motors are accessible through the Linux input force-feedback interface. Applications must explicitly use this interface.
+- Sensors: `lenovo-elden-sensors` provides accelerometer, gyroscope, ambient light, proximity, magnetometer/compass and Hall sensor support.
+- Virtual sensors: `lenovo-elden-sensors` provides access to DSP-generated gravity, linear acceleration, rotation vectors, game rotation vectors, geomagnetic rotation vectors, step counts, step-detection events and significant-motion events.
+
+Known limitations:
 
 - microSD DMA is currently unavailable. The controller is restricted to PIO, resulting in slow reads and writes.
-- The display is currently locked to 120 Hz.
-- Coexistence of Android and Linux is not supported.
+- Both Type-C ports share the USB 2.0 controller path. Disconnecting one port may reset the controller and disrupt the other port.
+- Cameras are not yet supported.
 
-Peripherals not yet supported:
-
-- Cameras
-- Microphones
-- Accelerometer, magnetometer, ambient light sensor, and other sensors
+The kernel patches are available in [armbian/build](https://github.com/armbian/build).
 
 # Backing Up the Partitions
 
